@@ -88,7 +88,7 @@ export default function DealerRegisterPage() {
           </p>
           <div className="mt-8 space-y-3">
             <a
-              href={`${dealerDashboardUrl}/login`}
+              href={`${dealerDashboardUrl}`}
               className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-emerald-600/20"
             >
               Open dealer login
