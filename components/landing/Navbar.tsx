@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
+import { LogOut, ChevronDown, LayoutDashboard, ExternalLink } from "lucide-react";
 import { adminDashboardUrl, dealerDashboardUrl } from "@/lib/env";
 
 const navLinks = [
@@ -13,7 +13,7 @@ const navLinks = [
   { label: "PLOTS", href: "/properties?purpose=SALE&type=PLOT" },
   { label: "COMMERCIAL", href: "/properties?purpose=SALE&type=COMMERCIAL" },
   { label: "RENT", href: "/properties?purpose=RENT" },
-  { label: "AGENTS", href: "/agents" },
+  // { label: "AGENTS", href: "/agents" },
   { label: "NEW PROJECTS", href: "/new-projects" },
 ];
 
@@ -22,6 +22,7 @@ export default function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
     await logout();
@@ -31,10 +32,64 @@ export default function Navbar() {
   };
 
   const getDashboardUrl = () => {
-    if (user?.role === "ADMIN")  return `${adminDashboardUrl}/dashboard`;
+    if (user?.role === "ADMIN") return `${adminDashboardUrl}/dashboard`;
     if (user?.role === "DEALER") return `${dealerDashboardUrl}/dashboard`;
     return null;
   };
+
+  function isExternalOrigin(absoluteUrl: string): boolean {
+    try {
+      return new URL(absoluteUrl).origin !== window.location.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  const dashboardUrl = getDashboardUrl();
+  const dashboardExternal = dashboardUrl
+    ? isExternalOrigin(dashboardUrl)
+    : false;
+
+  const displayName = (user?.name || "User").trim();
+  const firstName = displayName.split(/\s+/)[0] || displayName;
+
+  const roleBadge = (() => {
+    if (!user?.role) return null;
+    const cls =
+      user.role === "DEALER"
+        ? "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200"
+        : user.role === "ADMIN"
+          ? "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-200"
+          : "bg-slate-50 text-slate-700 ring-1 ring-inset ring-slate-200";
+    return (
+      <span
+        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}
+      >
+        {user.role}
+      </span>
+    );
+  })();
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const el = userMenuRef.current;
+      if (!el) return;
+      if (e.target instanceof Node && el.contains(e.target)) return;
+      setUserMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [userMenuOpen]);
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -67,33 +122,72 @@ export default function Navbar() {
             {loading ? (
               <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
             ) : user ? (
-              <div className="relative">
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-2 rounded-xl transition-colors">
-                  <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    {user.name[0].toUpperCase()}
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  className="group flex min-w-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm transition hover:bg-gray-50"
+                >
+                  <div className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-linear-to-br from-emerald-600 to-green-500 text-white">
+                    <span className="text-xs font-bold">
+                      {user.name?.[0]?.toUpperCase() ?? "U"}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">{user.name}</span>
-                  <ChevronDown size={14} className="text-gray-400" />
+                  <span className="hidden max-w-[140px] truncate text-left text-sm font-semibold text-gray-800 sm:inline">
+                    {firstName}
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={`ml-0.5 shrink-0 text-gray-400 transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
-                    <div className="px-4 py-2 border-b border-gray-50">
-                      <div className="text-sm font-semibold text-gray-800 truncate">{user.name}</div>
-                      <div className="text-xs text-gray-400 truncate">{user.email}</div>
-                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded mt-1 inline-block ${user.role === "DEALER" ? "bg-blue-100 text-blue-700" : user.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-600"}`}>{user.role}</span>
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+                  >
+                    <div className="border-b border-gray-200 px-3 py-2">
+                      <div className="truncate text-sm font-semibold text-gray-900">
+                        {displayName}
+                      </div>
+                      <div className="mt-1">{roleBadge}</div>
                     </div>
-                    {getDashboardUrl() && (
-                      <a href={getDashboardUrl()!}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                        <LayoutDashboard size={15} className="text-gray-400" />Dashboard
-                      </a>
-                    )}
-                    <button onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                      <LogOut size={15} />Logout
-                    </button>
+
+                    <div className="py-1">
+                      {dashboardUrl && (
+                        <a
+                          href={dashboardUrl}
+                          target={dashboardExternal ? "_blank" : undefined}
+                          rel={dashboardExternal ? "noreferrer" : undefined}
+                          onClick={(e) => {
+                            setUserMenuOpen(false);
+                            if (!dashboardExternal) return;
+                            const token = sessionStorage.getItem("apiToken");
+                            if (!token) return;
+                            if (user?.role !== "DEALER") return;
+                            e.preventDefault();
+                            window.location.href = `${dealerDashboardUrl}/auth/sync#${encodeURIComponent(token)}`;
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100"
+                        >
+                          <LayoutDashboard size={16} className="text-gray-500" />
+                          <span className="flex-1">Dashboard</span>
+                          {dashboardExternal && (
+                            <ExternalLink size={14} className="text-gray-400" />
+                          )}
+                        </a>
+                      )}
+
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -133,18 +227,31 @@ export default function Navbar() {
             <div className="px-3 pt-3 border-t border-gray-100 mt-2 space-y-2">
               {user ? (
                 <>
-                  <div className="flex items-center gap-2 px-1 py-2">
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      {user.name[0].toUpperCase()}
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-9 h-9 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {user.name?.[0]?.toUpperCase() ?? "U"}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-gray-800 truncate">
+                            {user.name}
+                          </div>
+                        </div>
+                      </div>
+                      {roleBadge}
                     </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-800">{user.name}</div>
-                      <div className="text-xs text-gray-400">{user.role}</div>
-                    </div>
-                  </div>
                   {getDashboardUrl() && (
-                    <a href={getDashboardUrl()!} className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700">
-                      <LayoutDashboard size={15} />Dashboard
+                    <a
+                      href={getDashboardUrl()!}
+                      target={dashboardExternal ? "_blank" : undefined}
+                      rel={dashboardExternal ? "noreferrer" : undefined}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                    >
+                      <LayoutDashboard size={16} className="text-gray-500" />
+                      Dashboard
+                      {dashboardExternal && (
+                        <ExternalLink size={14} className="text-gray-400" />
+                      )}
                     </a>
                   )}
                   <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left px-2 py-2 text-sm text-red-600">

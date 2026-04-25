@@ -1,36 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, RotateCcw, Search, MapPin } from "lucide-react";
+import {  Search, MapPin } from "lucide-react";
 
 const CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Peshawar", "Quetta", "Multan", "Faisalabad", "Hyderabad", "Sialkot", "Gujranwala", "Abbottabad"];
-const TYPES = ["Any", "HOUSE", "APARTMENT", "PLOT", "COMMERCIAL", "FARMHOUSE", "ROOM"];
-const BEDS = ["Any", "1", "2", "3", "4", "5", "6+"];
-const PRICES_SALE = [
-  { label: "Any", value: "" },
-  { label: "25 Lac", value: "2500000" },
-  { label: "50 Lac", value: "5000000" },
-  { label: "1 Crore", value: "10000000" },
-  { label: "2 Crore", value: "20000000" },
-  { label: "5 Crore", value: "50000000" },
-  { label: "10 Crore", value: "100000000" },
-];
-const PRICES_RENT = [
-  { label: "Any", value: "" },
-  { label: "10,000", value: "10000" },
-  { label: "25,000", value: "25000" },
-  { label: "50,000", value: "50000" },
-  { label: "1 Lac", value: "100000" },
-  { label: "2 Lac", value: "200000" },
-];
-const AREAS = [
-  { label: "Any", value: "" },
-  { label: "3 Marla", value: "3" },
-  { label: "5 Marla", value: "5" },
-  { label: "10 Marla", value: "10" },
-  { label: "1 Kanal", value: "20" },
-  { label: "2 Kanal", value: "40" },
-];
 
 export default function Hero() {
   const router = useRouter();

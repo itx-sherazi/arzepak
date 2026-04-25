@@ -2,21 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
-
-import { apiUrl } from "@/lib/env";
-
-const API = apiUrl;
-
-interface Project {
-  _id: string;
-  slug: string;
-  title: string;
-  developer: string;
-  city: string;
-  status: string;
-  images: string[];
-  units: { name: string; minPrice: number }[];
-}
+import { getProjectsPreview } from "@/services/projects";
+import type { ProjectCardPreview } from "@/types/project";
 
 function statusStyle(s: string) {
   switch (s) {
@@ -28,7 +15,7 @@ function statusStyle(s: string) {
   }
 }
 
-function minPrice(units: Project["units"]) {
+function minPrice(units: ProjectCardPreview["units"]) {
   if (!units?.length) return null;
   const min = Math.min(...units.map(u => u.minPrice).filter(Boolean));
   if (!min || !isFinite(min)) return null;
@@ -38,15 +25,18 @@ function minPrice(units: Project["units"]) {
 }
 
 export default function NewProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectCardPreview[]>([]);
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/projects?limit=3&sort=-createdAt`)
-      .then(r => r.json())
-      .then(j => setProjects(j.data || []))
-      .catch(() => setProjects([]))
-      .finally(() => setLoading(false));
+    let cancel = false;
+    getProjectsPreview({ limit: 3, sort: "-createdAt" })
+      .then((j) => {
+        if (!cancel) setProjects((j.data as ProjectCardPreview[]) || []);
+      })
+      .catch(() => { if (!cancel) setProjects([]); })
+      .finally(() => { if (!cancel) setLoading(false); });
+    return () => { cancel = true; };
   }, []);
 
   const skeletons = [1, 2, 3];
