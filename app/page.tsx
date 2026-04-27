@@ -16,7 +16,7 @@ export const metadata = {
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <Navbar />
+      
       <Hero />
       <PropertyCategories />
       <FeaturedProperties />
@@ -24,7 +24,7 @@ export default function Home() {
       <NewProjects />
       <WhyChooseUs />
       <Newsletter />
-      <Footer />
+     
     </main>
   );
 }

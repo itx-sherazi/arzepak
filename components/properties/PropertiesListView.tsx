@@ -90,12 +90,7 @@ export default function PropertiesListView() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            </div>
-            <span className="text-base font-bold text-gray-800 hidden sm:block">arzepak<span className="text-green-600">Properties</span></span>
-          </Link>
+          
 
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
             {["SALE","RENT"].map(p => (
@@ -243,7 +238,6 @@ export default function PropertiesListView() {
               <option value="-createdAt">Newest First</option>
               <option value="price">Price: Low → High</option>
               <option value="-price">Price: High → Low</option>
-              <option value="-views">Most Popular</option>
             </select>
           </div>
 

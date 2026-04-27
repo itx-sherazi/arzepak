@@ -44,6 +44,7 @@ export interface ProjectDetail {
     nearbyFacilities: string[];
     otherFacilities: string[];
   };
+  logo?: string;
   images: string[];
   floorPlans: { label: string; image: string }[];
   paymentPlan?: string;
@@ -51,7 +52,6 @@ export interface ProjectDetail {
   units?: ProjectUnit[];
   updates?: ProjectUpdate[];
   isFeatured: boolean;
-  views: number;
   status: string;
   latitude?: number;
   longitude?: number;
@@ -71,7 +71,6 @@ export interface ProjectListItem {
   maxPrice?: number;
   images: string[];
   isFeatured: boolean;
-  views: number;
   offering: string[];
   status: string;
   createdAt: string;

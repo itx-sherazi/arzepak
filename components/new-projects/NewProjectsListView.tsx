@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MapPin, Eye, Star, Building2, ChevronRight } from "lucide-react";
+import { MapPin, Star, Building2, ChevronRight } from "lucide-react";
 import { getProjectsList } from "@/services/projects";
 import type { ProjectListItem } from "@/types/project";
 import { formatPriceShort } from "./projectFormatting";
@@ -37,23 +37,7 @@ export default function NewProjectsListView() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-              </svg>
-            </div>
-            <span className="text-base font-bold text-gray-800">
-              arzepak<span className="text-green-600">Properties</span>
-            </span>
-          </Link>
-          <ChevronRight size={14} className="text-gray-400" />
-          <span className="text-sm font-semibold text-gray-600">New Projects</span>
-        </div>
-      </div>
-
+     
       <div className="bg-gradient-to-r from-green-700 to-green-600 text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-3xl font-bold mb-2">New Real Estate Projects</h1>
@@ -157,10 +141,6 @@ export default function NewProjectsListView() {
                           {p.developer}
                         </div>
                       )}
-                      <div className="flex items-center gap-1 text-xs text-gray-400 justify-end mt-0.5">
-                        <Eye size={11} />
-                        {p.views}
-                      </div>
                     </div>
                   </div>
                 </div>

@@ -88,29 +88,7 @@ export default function PropertyDetailView() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <button onClick={() => router.back()} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
-            <ChevronLeft size={16}/> Back
-          </button>
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-green-600 rounded-md flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="white" className="w-3.5 h-3.5"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            </div>
-            <span className="font-bold text-gray-800 hidden sm:block">arze<span className="text-green-600">Pak</span></span>
-          </Link>
-          <div className="flex-1"/>
-          <div className="flex items-center gap-2">
-            <button onClick={share} className="flex items-center gap-1.5 border border-gray-200 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-              <Share2 size={14}/><span className="hidden sm:block">Share</span>
-            </button>
-            <button className="flex items-center gap-1.5 border border-gray-200 px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-              <Heart size={14}/><span className="hidden sm:block">Save</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
