@@ -183,6 +183,7 @@ export default function ProjectDetailView() {
   const [locationTab, setLocationTab] = useState<"map" | "nearby">("map");
   const [mapRevealed, setMapRevealed] = useState(false);
   const [selectedFP, setSelectedFP] = useState(0);
+  const [fpLightbox, setFpLightbox] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -447,38 +448,114 @@ export default function ProjectDetailView() {
               </div>
             )}
 
+            {/* Floor Plan Lightbox */}
+            {fpLightbox && project.floorPlans[selectedFP]?.image && (
+              <Lightbox
+                imgs={project.floorPlans.filter(fp => fp.image).map(fp => fp.image)}
+                startIdx={project.floorPlans.filter(fp => fp.image).findIndex((_, i) => i === selectedFP) ?? 0}
+                onClose={() => setFpLightbox(false)}
+              />
+            )}
+
             {/* Floor Plans */}
             {project.floorPlans?.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 pt-5 pb-4 border-b border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900">Floor Plans</h2>
+                {/* Header */}
+                <div className="px-6 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Floor Plans</h2>
+                    <p className="text-xs text-gray-400 mt-0.5">{project.floorPlans.length} plan{project.floorPlans.length > 1 ? "s" : ""} available</p>
+                  </div>
+                  <span className="text-xs font-semibold text-green-600 bg-green-50 border border-green-100 px-3 py-1 rounded-full">
+                    {project.floorPlans[selectedFP]?.label || `Plan ${selectedFP + 1}`}
+                  </span>
                 </div>
-                <div className="flex min-h-[340px]">
-                  <div className="w-56 flex-shrink-0 border-r border-gray-100 overflow-y-auto max-h-[520px]">
+
+                {/* Mobile: horizontal scrollable tab chips */}
+                <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-gray-50 sm:hidden">
+                  {project.floorPlans.map((fp, i) => (
+                    <button key={i} type="button" onClick={() => setSelectedFP(i)}
+                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                        selectedFP === i
+                          ? "bg-green-600 text-white border-green-600"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-green-300"
+                      }`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-3.5 h-3.5 flex-shrink-0">
+                        <rect x="3" y="3" width="18" height="18" rx="1.5" /><path d="M3 9h18M9 9v12M3 15h6" />
+                      </svg>
+                      {fp.label || `Plan ${i + 1}`}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Desktop: side-by-side | Mobile: image full width */}
+                <div className="flex flex-col sm:flex-row min-h-[340px] sm:min-h-[420px]">
+                  {/* Left tab list — desktop only */}
+                  <div className="hidden sm:block w-72 flex-shrink-0 border-r border-gray-100 overflow-y-auto max-h-[580px]">
                     {project.floorPlans.map((fp, i) => (
                       <button key={i} onClick={() => setSelectedFP(i)}
-                        className={`w-full flex items-center gap-3 px-4 py-4 text-left border-b border-gray-50 transition-colors relative ${selectedFP === i ? "bg-green-50/70 text-green-700" : "text-gray-600 hover:bg-gray-50"}`}>
-                        {selectedFP === i && <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-green-600 rounded-r-full" />}
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
-                          className={`w-5 h-5 flex-shrink-0 ${selectedFP === i ? "text-green-600" : "text-gray-400"}`}>
-                          <rect x="3" y="3" width="18" height="18" rx="1.5" /><path d="M3 9h18M9 9v12M3 15h6" />
-                        </svg>
-                        <span className="flex-1 text-xs font-semibold leading-snug line-clamp-2">{fp.label || `Floor Plan ${i + 1}`}</span>
-                        <ChevronRight size={14} className={`flex-shrink-0 ${selectedFP === i ? "text-green-500" : "text-gray-300"}`} />
+                        className={`w-full flex items-center gap-3 px-5 py-4 text-left border-b border-gray-50 transition-all relative ${
+                          selectedFP === i ? "bg-green-50 text-green-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+                        }`}>
+                        {selectedFP === i && <span className="absolute left-0 top-0 bottom-0 w-1 bg-green-600 rounded-r-full" />}
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${selectedFP === i ? "bg-green-100" : "bg-gray-100"}`}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
+                            className={`w-5 h-5 ${selectedFP === i ? "text-green-600" : "text-gray-400"}`}>
+                            <rect x="3" y="3" width="18" height="18" rx="1.5" /><path d="M3 9h18M9 9v12M3 15h6" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold leading-snug line-clamp-1">{fp.label || `Floor Plan ${i + 1}`}</div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">Tap to view</div>
+                        </div>
+                        <ChevronRight size={15} className={`flex-shrink-0 ${selectedFP === i ? "text-green-500" : "text-gray-300"}`} />
                       </button>
                     ))}
                   </div>
-                  <div className="flex-1 flex items-center justify-center p-6 bg-gray-50/40 min-h-[340px]">
+
+                  {/* Image viewer */}
+                  <div className="flex-1 flex flex-col items-center justify-center bg-gray-50/60 relative min-h-[320px] sm:min-h-[480px]">
                     {project.floorPlans[selectedFP]?.image ? (
-                      <img key={selectedFP} src={project.floorPlans[selectedFP].image}
-                        alt={project.floorPlans[selectedFP].label || `Floor Plan ${selectedFP + 1}`}
-                        className="max-w-full max-h-[480px] w-auto object-contain rounded-2xl border border-gray-200 shadow-sm bg-white" />
+                      <>
+                        <div className="relative group cursor-zoom-in w-full h-full absolute inset-0" onClick={() => setFpLightbox(true)}>
+                          <img key={selectedFP}
+                            src={project.floorPlans[selectedFP].image}
+                            alt={project.floorPlans[selectedFP].label || `Floor Plan ${selectedFP + 1}`}
+                            className="w-full h-full object-contain bg-white transition-transform duration-200 group-hover:scale-[1.01]" />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                            <span className="bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
+                              <Camera size={12} /> Tap to expand
+                            </span>
+                          </div>
+                          {project.floorPlans[selectedFP].label && (
+                            <div className="absolute bottom-10 left-0 right-0 text-center">
+                              <span className="bg-black/40 text-white text-xs font-medium px-3 py-1 rounded-full backdrop-blur-sm">{project.floorPlans[selectedFP].label}</span>
+                            </div>
+                          )}
+                        </div>
+                      </>
                     ) : (
                       <div className="flex flex-col items-center gap-3 text-gray-300 py-12">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="w-14 h-14">
                           <rect x="3" y="3" width="18" height="18" rx="1.5" /><path d="M3 9h18M9 9v12M3 15h6" />
                         </svg>
-                        <span className="text-sm text-gray-400">No image uploaded</span>
+                        <span className="text-sm text-gray-400">No image for this floor plan</span>
+                      </div>
+                    )}
+
+                    {/* Prev / Next */}
+                    {project.floorPlans.length > 1 && (
+                      <div className="absolute bottom-3 right-3 flex gap-2">
+                        <button type="button"
+                          onClick={() => setSelectedFP(i => (i - 1 + project.floorPlans.length) % project.floorPlans.length)}
+                          className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-colors shadow-sm">
+                          <ChevronLeft size={16} />
+                        </button>
+                        <button type="button"
+                          onClick={() => setSelectedFP(i => (i + 1) % project.floorPlans.length)}
+                          className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-colors shadow-sm">
+                          <ChevronRight size={16} />
+                        </button>
                       </div>
                     )}
                   </div>
