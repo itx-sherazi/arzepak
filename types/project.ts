@@ -47,6 +47,7 @@ export interface ProjectDetail {
   logo?: string;
   images: string[];
   floorPlans: { label: string; image: string }[];
+  galleries?: { title: string; images: string[] }[];
   paymentPlan?: string;
   paymentPlans?: { label: string; image: string }[];
   units?: ProjectUnit[];

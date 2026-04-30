@@ -7,10 +7,9 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { getProjectBySlug } from "@/services/projects";
 import { postInquiry } from "@/services/inquiries";
-import type { NearbyItem, ProjectDetail } from "@/types/project";
+import type { ProjectDetail } from "@/types/project";
 import { formatPriceFull, formatProjectDate } from "./projectFormatting";
-import { DEFAULT_NEARBY_LABELS, FEATURE_LABELS, nearbyItemHref } from "./locationUtils";
-import LocationMapPanel from "./LocationMapPanel";
+import { FEATURE_LABELS } from "./locationUtils";
 
 /* ── Lightbox ─────────────────────────────────────────────── */
 function Lightbox({ imgs, startIdx, onClose }: { imgs: string[]; startIdx: number; onClose: () => void }) {
@@ -125,7 +124,7 @@ function Gallery({ imgs, featured, onOpen }: { imgs: string[]; featured: boolean
 function ProjectHeader({ project }: { project: ProjectDetail }) {
   const hasPrice = project.minPrice || project.maxPrice;
   return (
-    <div className="bg-white border-b border-gray-100 shadow-sm">
+    <div className="bg-white border-b border-gray-100  mt-5 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           {/* Left: logo + name + address */}
@@ -168,6 +167,52 @@ function ProjectHeader({ project }: { project: ProjectDetail }) {
   );
 }
 
+/* ── Galleries Section ─────────────────────────────────────── */
+function GalleriesSection({ galleries }: { galleries: { title: string; images: string[] }[] }) {
+  const [lightbox, setLightbox] = useState<{ imgs: string[]; idx: number } | null>(null);
+  const validGalleries = galleries.filter(g => g.images.length > 0);
+  if (!validGalleries.length) return null;
+
+  return (
+    <>
+      {lightbox && <Lightbox imgs={lightbox.imgs} startIdx={lightbox.idx} onClose={() => setLightbox(null)} />}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {validGalleries.map((g, gi) => (
+            <button key={gi} type="button"
+              onClick={() => setLightbox({ imgs: g.images, idx: 0 })}
+              className="relative group aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer text-left">
+              {/* Cover image */}
+              <img
+                src={g.images[0]}
+                alt={g.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              {/* Dark overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+              {/* Bottom info */}
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <div className="text-white font-bold text-sm leading-tight drop-shadow">{g.title}</div>
+                <div className="text-white/70 text-xs mt-0.5 flex items-center gap-1">
+                  <Camera size={10} />
+                  {g.images.length} {g.images.length === 1 ? "photo" : "photos"}
+                </div>
+              </div>
+              {/* Hover play icon */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 border border-white/30">
+                  <Camera size={20} className="text-white" />
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ── Main component ────────────────────────────────────────── */
 export default function ProjectDetailView() {
   const { slug } = useParams<{ slug: string }>();
@@ -180,8 +225,6 @@ export default function ProjectDetailView() {
   const [showAllDesc, setShowAllDesc] = useState(false);
   const [sending, setSending] = useState(false);
   const [inquiry, setInquiry] = useState({ name: user?.name || "", phone: "", email: user?.email || "" });
-  const [locationTab, setLocationTab] = useState<"map" | "nearby">("map");
-  const [mapRevealed, setMapRevealed] = useState(false);
   const [selectedFP, setSelectedFP] = useState(0);
   const [fpLightbox, setFpLightbox] = useState(false);
 
@@ -233,10 +276,6 @@ export default function ProjectDetailView() {
     { key: "updates", label: `Updates (${project.updates?.length || 0})`, hide: !project.updates?.length },
   ].filter(t => !t.hide);
 
-  const nearbyTabRows: NearbyItem[] =
-    project.nearbyItems?.length ? project.nearbyItems : DEFAULT_NEARBY_LABELS.map(label => ({ label }));
-  const nearbyTabIntro = project.nearbyNote?.trim() || "Explore schools, hospitals, parks, and markets around this project on Google Maps.";
-
   const inp = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
 
   return (
@@ -271,6 +310,13 @@ export default function ProjectDetailView() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-0">
         <Gallery imgs={imgs} featured={project.isFeatured} onOpen={i => setLightboxIdx(i)} />
       </div>
+
+      {/* Galleries — right below main gallery */}
+      {(project.galleries?.length ?? 0) > 0 && (
+        <div className="pt-4">
+          <GalleriesSection galleries={project.galleries!} />
+        </div>
+      )}
 
       {/* Project header (logo + name + price) */}
       <ProjectHeader project={project} />
@@ -401,49 +447,36 @@ export default function ProjectDetailView() {
               </div>
             </div>
 
-            {/* Location & Nearby */}
+            {/* Location */}
             {project.address && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-5 pt-5 pb-2">
-                  <h2 className="text-lg font-bold text-gray-900 tracking-tight">Location & Nearby</h2>
-                </div>
-                <div className="flex flex-wrap items-end justify-between gap-2 px-5 border-b border-gray-100">
-                  <div className="flex gap-6">
-                    {["map", "nearby"].map(t => (
-                      <button key={t} type="button" onClick={() => { setLocationTab(t as "map" | "nearby"); if (t === "map") setMapRevealed(false); }}
-                        className={`pb-3 text-xs font-bold tracking-wide uppercase transition-colors relative ${locationTab === t ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}>
-                        {t === "map" ? (project.city ? `${project.city} — Map` : "Project map") : "Nearby"}
-                        {locationTab === t && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-600 rounded-full" />}
-                      </button>
-                    ))}
+                <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Location</h2>
+                    <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1.5">
+                      <MapPin size={13} className="text-green-600 flex-shrink-0" />
+                      {project.address}{project.city ? `, ${project.city}` : ""}
+                    </p>
                   </div>
-                  <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${project.city} Pakistan`)}`}
+                  <a href={`https://www.google.com/maps/search/${encodeURIComponent(`${project.address} ${project.city || ""}`)}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="pb-3 text-xs font-semibold text-green-600 hover:text-green-700 whitespace-nowrap">
-                    More {project.city} maps →
+                    className="flex-shrink-0 text-xs font-semibold text-green-600 hover:text-green-700 border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-50 transition-colors">
+                    Open in Maps →
                   </a>
                 </div>
-                <div className="p-5">
-                  <p className="text-sm text-gray-600 mb-4 flex items-start gap-2">
-                    <MapPin size={16} className="text-green-600 shrink-0 mt-0.5" /><span>{project.address}</span>
-                  </p>
-                  {locationTab === "map" && (
-                    <LocationMapPanel project={project} mapRevealed={mapRevealed} onRevealMap={() => setMapRevealed(true)} />
-                  )}
-                  {locationTab === "nearby" && (
-                    <div className="space-y-4">
-                      <p className="text-sm text-gray-600">{nearbyTabIntro}</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {nearbyTabRows.map((item, idx) => (
-                          <a key={`${item.label}-${idx}`} href={nearbyItemHref(project, item)} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center justify-between gap-2 rounded-xl border border-gray-100 bg-gray-50/80 px-4 py-3 text-sm font-medium text-gray-800 hover:border-green-200 hover:bg-green-50/60 transition-colors">
-                            <span>{item.label}</span>
-                            <span className="text-green-600 text-xs font-semibold">Open map</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="rounded-xl overflow-hidden m-4 border border-gray-100 shadow-sm">
+                  <iframe
+                    title="Project Location"
+                    src={
+                      project.latitude && project.longitude
+                        ? `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${project.latitude},${project.longitude}&zoom=16`
+                        : `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(`${project.address}, ${project.city || "Pakistan"}`)}&zoom=14`
+                    }
+                    className="w-full h-72 sm:h-96 border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    allowFullScreen
+                  />
                 </div>
               </div>
             )}
@@ -592,6 +625,7 @@ export default function ProjectDetailView() {
                 </div>
               </div>
             )}
+
           </div>
 
           {/* Right sidebar */}
