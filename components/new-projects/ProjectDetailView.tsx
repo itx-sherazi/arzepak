@@ -72,7 +72,7 @@ function Lightbox({ imgs, startIdx, onClose }: { imgs: string[]; startIdx: numbe
   );
 }
 
-/* ── Gallery (Zameen.com style) ────────────────────────────── */
+/* ── Gallery  ────────────────────────────── */
 function Gallery({ imgs, featured, onOpen }: { imgs: string[]; featured: boolean; onOpen: (i: number) => void }) {
   const shown = imgs.slice(0, 4);
   const right = shown.slice(1, 4);
@@ -469,8 +469,10 @@ export default function ProjectDetailView() {
                     title="Project Location"
                     src={
                       project.latitude && project.longitude
-                        ? `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${project.latitude},${project.longitude}&zoom=16`
-                        : `https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(`${project.address}, ${project.city || "Pakistan"}`)}&zoom=14`
+                        ? `https://maps.google.com/maps?q=${project.latitude},${project.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+                        : project.mapUrl
+                          ? (project.mapUrl.match(/src="([^"]+)"/) ? project.mapUrl.match(/src="([^"]+)"/)![1] : project.mapUrl)
+                          : `https://maps.google.com/maps?q=${encodeURIComponent(`${project.address}, ${project.city || "Pakistan"}`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`
                     }
                     className="w-full h-72 sm:h-96 border-0"
                     loading="lazy"
