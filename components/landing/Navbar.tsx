@@ -94,17 +94,14 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 w-full">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-green-600 rounded-lg flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-800">
-              Arze<span className="text-green-600">Pak</span>
-            </span>
+          <Link href="/" className="flex items-center">
+            <img 
+              src="/logo.png" 
+              alt="ArzePak Logo" 
+              className="h-full w-35 object-contain"
+            />
           </Link>
 
           {/* Desktop Nav */}

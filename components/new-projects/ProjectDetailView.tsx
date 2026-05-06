@@ -246,12 +246,26 @@ export default function ProjectDetailView() {
     e.preventDefault();
     if (!inquiry.phone) return toast.error("Phone number required");
     setSending(true);
+
+    const rawNum = project?.contactNumber || "+923278699997";
+    const cleanNum = rawNum.replace(/\D/g, "");
+    const waNum = cleanNum.startsWith("0") ? "92" + cleanNum.slice(1) : cleanNum;
+    const text = `Hi, I'm interested in "${project?.title}" (${project?.city}).\n\nMy Details:\n- Name: ${inquiry.name}\n- Phone: ${inquiry.phone}\n- Email: ${inquiry.email || "N/A"}`;
+    const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(text)}`;
+
     try {
       await postInquiry({ ...inquiry, propertyId: project?._id, message: `Inquiry about project: ${project?.title}` });
-      toast.success("Request sent! We'll call you soon.");
-      setInquiry(f => ({ ...f, phone: "" }));
-    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Failed"); }
-    setSending(false);
+      toast.success("Inquiry saved! Opening WhatsApp...");
+    } catch (err: unknown) {
+      console.error("Inquiry error:", err);
+      toast.error("Could not save inquiry, but opening WhatsApp...");
+    } finally {
+      setTimeout(() => {
+        window.open(waUrl, "_blank");
+        setSending(false);
+        setInquiry(f => ({ ...f, phone: "" }));
+      }, 800);
+    }
   };
 
   if (loading) return (
@@ -652,14 +666,25 @@ export default function ProjectDetailView() {
                   <div className="flex-1 h-px bg-gray-100" /><span className="text-xs text-gray-400">or</span><div className="flex-1 h-px bg-gray-100" />
                 </div>
                 <div className="flex gap-2">
-                  <a href="https://wa.me/923001234567" target="_blank" rel="noreferrer"
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 transition-colors">
-                    <MessageCircle size={15} />WhatsApp
-                  </a>
-                  <a href="tel:+923001234567"
-                    className="flex-1 border border-gray-200 text-gray-700 text-sm font-semibold py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
-                    <Phone size={15} />Call Now
-                  </a>
+                  {(() => {
+                    const rawNum = project?.contactNumber || "+923278699997";
+                    const cleanNum = rawNum.replace(/\D/g, "");
+                    const waNum = cleanNum.startsWith("0") ? "92" + cleanNum.slice(1) : cleanNum;
+                    const waMsg = encodeURIComponent(`Hi, I'm interested in "${project?.title}" in ${project?.city}. Please share more details.`);
+                    
+                    return (
+                      <>
+                        <a href={`https://wa.me/${waNum}?text=${waMsg}`} target="_blank" rel="noreferrer"
+                          className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 transition-colors">
+                          <MessageCircle size={15} />WhatsApp
+                        </a>
+                        <a href={`tel:${rawNum}`}
+                          className="flex-1 border border-gray-200 text-gray-700 text-sm font-semibold py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
+                          <Phone size={15} />Call Now
+                        </a>
+                      </>
+                    );
+                  })()}
                 </div>
                 <p className="text-[10px] text-gray-400 text-center">By submitting this form, you agree to our Terms of Use.</p>
               </form>

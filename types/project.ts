@@ -59,6 +59,7 @@ export interface ProjectDetail {
   mapUrl?: string;
   nearbyNote?: string;
   nearbyItems?: NearbyItem[];
+  contactNumber?: string;
 }
 
 export interface ProjectListItem {

@@ -27,12 +27,12 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-[450px] flex items-center overflow-hidden font-sans">
-      {/* Background Image - Representative of Pakistani modern housing */}
+      {/* Background Image - Luxury modern villa */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1600')" }} 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
+        style={{ backgroundImage: "url('/hero-bg.png')" }} 
       />
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 md:px-20 lg:px-24">
         {/* Left Aligned Content */}
