@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import { AppProviders } from "@/components/providers/AppProviders";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import FloatingButtons from "@/components/ui/FloatingButtons";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -22,7 +23,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
           <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
           {children}
-           <Footer />
+          <Footer />
+          <FloatingButtons />
         </AppProviders>
       </body>
     </html>

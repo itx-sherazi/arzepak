@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { LogOut, ChevronDown, LayoutDashboard, ExternalLink } from "lucide-react";
+import { LogOut, ChevronDown, LayoutDashboard, ExternalLink, Bell } from "lucide-react";
 import { adminDashboardUrl, dealerDashboardUrl } from "@/lib/env";
 
 const navLinks = [
@@ -13,8 +13,8 @@ const navLinks = [
   { label: "PLOTS", href: "/properties?purpose=SALE&type=PLOT" },
   { label: "COMMERCIAL", href: "/properties?purpose=SALE&type=COMMERCIAL" },
   { label: "RENT", href: "/properties?purpose=RENT" },
-  // { label: "AGENTS", href: "/agents" },
   { label: "NEW PROJECTS", href: "/new-projects" },
+  { label: "BLOG", href: "/blog" },
 ];
 
 export default function Navbar() {
@@ -176,6 +176,12 @@ export default function Navbar() {
                           )}
                         </a>
                       )}
+
+                      <Link href="/alerts" onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100">
+                        <Bell size={16} className="text-gray-500" />
+                        <span>Property Alerts</span>
+                      </Link>
 
                       <button
                         onClick={handleLogout}

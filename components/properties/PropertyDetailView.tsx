@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-import { fetchPropertyBySlug } from "@/services/properties";
+import { fetchPropertyBySlug, fetchPropertiesList } from "@/services/properties";
 import { postInquiry } from "@/services/inquiries";
-import type { PropertyDetail } from "@/types/property";
+import type { PropertyDetail, PropertyListItem } from "@/types/property";
 import { formatPriceDetail } from "./propertyFormatting";
 
 /* ── helpers ─────────────────────────────────── */
@@ -166,17 +166,30 @@ function Gallery({ imgs, featured, purpose, onOpen, ytCount = 0 }: { imgs: strin
 export default function PropertyDetailView() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
-  const [property, setProperty] = useState<PropertyDetail | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const [property, setProperty]   = useState<PropertyDetail | null>(null);
+  const [loading, setLoading]     = useState(true);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-  const [sending, setSending]   = useState(false);
-  const [inquiry, setInquiry]   = useState({ name: user?.name || "", email: user?.email || "", phone: "", message: "" });
+  const [sending, setSending]     = useState(false);
+  const [inquiry, setInquiry]     = useState({ name: user?.name || "", email: user?.email || "", phone: "", message: "" });
+  const [similar, setSimilar]     = useState<PropertyListItem[]>([]);
 
   useEffect(() => {
     let cancel = false;
     setLoading(true);
+    setSimilar([]);
     fetchPropertyBySlug(String(slug))
-      .then(j => { if (!cancel) { if (j.success) setProperty(j.data); else setProperty(null); } })
+      .then(j => {
+        if (!cancel) {
+          if (j.success) {
+            setProperty(j.data);
+            /* Fetch similar properties */
+            const p = j.data;
+            fetchPropertiesList(`city=${encodeURIComponent(p.city)}&type=${p.type}&purpose=${p.purpose}&limit=5`)
+              .then(r => { if (!cancel) setSimilar((r.data || []).filter((x: PropertyListItem) => x.slug !== p.slug).slice(0, 4)); })
+              .catch(() => {});
+          } else setProperty(null);
+        }
+      })
       .catch(() => { if (!cancel) setProperty(null); })
       .finally(() => { if (!cancel) setLoading(false); });
     return () => { cancel = true; };
@@ -226,9 +239,24 @@ export default function PropertyDetailView() {
 
   const inp = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
 
+  const waNumber = property.contactMobiles?.[0] || dealer?.whatsapp;
+  const waMsg = encodeURIComponent(`Hi, I'm interested in: ${property.title}`);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {lightboxIdx !== null && <Lightbox imgs={gallery} ytVideos={ytVideos} startIdx={lightboxIdx} onClose={() => setLightboxIdx(null)} />}
+
+      {/* WhatsApp float button */}
+      {waNumber && (
+        <a href={`https://wa.me/${waNumber}?text=${waMsg}`} target="_blank" rel="noreferrer"
+          aria-label="Chat on WhatsApp"
+          className="fixed bottom-20 right-6 z-40 w-13 h-13 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110"
+          style={{ width: 52, height: 52 }}>
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+        </a>
+      )}
 
       {/* Breadcrumbs */}
       <div className="bg-white border-b border-gray-100">
@@ -458,6 +486,41 @@ export default function PropertyDetailView() {
           </div>
         </div>
       </div>
+
+      {/* Similar Properties */}
+      {similar.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 mt-2">
+          <h2 className="text-xl font-bold text-gray-900 mb-5">Similar Properties</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {similar.map(p => {
+              const img = (typeof p.images?.[0] === "string" ? p.images[0] : (p.images?.[0] as {url:string})?.url) || "";
+              return (
+                <Link key={p._id} href={`/properties/${p.slug}`}
+                  className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md hover:border-green-200 transition-all">
+                  <div className="relative h-44 overflow-hidden bg-gray-100">
+                    {img
+                      ? <img src={img} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      : <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center"><Building2 size={28} className="text-green-300" /></div>
+                    }
+                    <span className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${p.purpose === "SALE" ? "bg-green-600 text-white" : "bg-blue-600 text-white"}`}>
+                      {p.purpose === "SALE" ? "FOR SALE" : "FOR RENT"}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-green-700 transition-colors mb-1">{p.title}</h3>
+                    <div className="flex items-center gap-1 text-gray-400 text-xs mb-2">
+                      <MapPin size={11} className="text-green-500" />{p.areaName}, {p.city}
+                    </div>
+                    <div className="text-base font-bold text-green-700">
+                      PKR {p.price >= 10000000 ? `${(p.price/10000000).toFixed(1)} Cr` : p.price >= 100000 ? `${(p.price/100000).toFixed(0)} Lac` : p.price.toLocaleString()}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

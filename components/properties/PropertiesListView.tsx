@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { SlidersHorizontal, MapPin, Bed, Bath, Maximize2, Heart, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { SlidersHorizontal, MapPin, Bed, Bath, Maximize2, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { PropertyCardSkeleton } from "@/components/ui/Skeleton";
 import { fetchPropertiesList } from "@/services/properties";
 import type { PropertyListItem } from "@/types/property";
 import { formatPriceCompact, timeAgo } from "./propertyFormatting";
@@ -238,12 +239,14 @@ export default function PropertiesListView() {
               <option value="-createdAt">Newest First</option>
               <option value="price">Price: Low → High</option>
               <option value="-price">Price: High → Low</option>
+              <option value="area">Area: Small → Large</option>
+              <option value="-area">Area: Large → Small</option>
             </select>
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-24">
-              <div className="w-10 h-10 border-2 border-green-500 border-t-transparent rounded-full animate-spin"/>
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => <PropertyCardSkeleton key={i} />)}
             </div>
           ) : properties.length === 0 ? (
             <div className="bg-white rounded-2xl p-16 text-center border border-gray-100">
@@ -278,14 +281,9 @@ export default function PropertiesListView() {
 
                   <div className="flex-1 p-5 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-bold text-gray-800 text-base leading-snug group-hover:text-green-700 transition-colors line-clamp-2">
-                          {p.title}
-                        </h3>
-                        <button type="button" className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5" onClick={e => e.preventDefault()}>
-                          <Heart size={18}/>
-                        </button>
-                      </div>
+                      <h3 className="font-bold text-gray-800 text-base leading-snug group-hover:text-green-700 transition-colors line-clamp-2">
+                        {p.title}
+                      </h3>
                       <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
                         <MapPin size={13} className="text-green-500 flex-shrink-0"/>
                         <span className="truncate">{p.areaName}, {p.city}</span>
